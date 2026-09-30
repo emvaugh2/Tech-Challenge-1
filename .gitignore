@@ -1,0 +1,37 @@
+# Ignore the local Terraform directory (contains massive provider binaries)
+**/.terraform/
+.terraform/
+.terraform.lock.hcl
+
+# Ignore local state files (contain sensitive plain-text infrastructure secrets)
+*.tfstate
+*.tfstate.*
+
+# Terraform plans
+*.tfplan
+
+# SSH keys
+*.pem
+
+# Ansible
+*.retry
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Ignore crash logs
+crash.log
+
+# Ignore local variable definitions (often contain passwords or API keys)
+*.tfvars
+*.tfvars.json
+
+# Ignore local override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Ignore .pem file
+master-private-key.pem 
