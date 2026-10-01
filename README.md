@@ -164,6 +164,12 @@ And that concludes our legacy migration project!
 
 ## Personal Notes
 
+10/02/2026
+
+
+
+
+
 10/01/206
 
 Lets talk about Phase 5 which is the real final phase. The rest is testing and using GitOps. Okay now we're getting our Jenkinsfile together. All I really had to do was put in my region and my ECR frontend and backend URIs. You can find this in the AWS console. 
@@ -180,7 +186,14 @@ So the pipeline failed. This was probably due to the instance restart. We're goi
 
 After that, go back to your clusters and update both frontend-ecs-service and backend. Use the latest revision and press save. They should run again. That's working now but when we went to the ALB's URL, we got a failure to fetch. Now, I'm getting sleepy at this point so AI is doing the heavy lifting. It appears we need to change our CORS_ORIGIN and our API URL in our backend and frontend in order to get this going. 
 
-Go into frontend and config.js. Change the local host to http://tech-challenge-1-alb-486707836.us-east-1.elb.amazonaws.com/api. Then go into the same file in the backend and put the same URL but remove the `/api` at the end. 
+Go into frontend and config.js. Change the local host to http://tech-challenge-1-alb-486707836.us-east-1.elb.amazonaws.com/api. Then go into the same file in the backend and put the same URL but remove the `/api` at the end. After you push your changes to your GitHub repo, make sure you check the repo to make sure the changes are there. Now, Build Now again in Jenkins. 
+
+We were still running into the Failed to fetch issue. I think we determined it's because the backend SG had the wrong source. We needed to change this to ALB security group. 
+
+***** MAKE SURE TO ADD THIS TO TERRAFORM ***** (I believe I did)
+
+Low key we got it to work on the /api/test URL path. Now we have to get the regular URL to work. 
+
 
 
 

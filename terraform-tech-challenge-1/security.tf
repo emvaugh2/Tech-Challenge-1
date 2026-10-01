@@ -74,6 +74,13 @@ resource "aws_security_group" "backend_sg" {
     to_port         = 8080
   }
 
+  ingress {
+    security_groups = [aws_security_group.alb_sg.id]
+    from_port       = 8080
+    protocol        = "tcp"
+    to_port         = 8080
+  }
+
 
   egress {
     cidr_blocks = ["0.0.0.0/0"]
