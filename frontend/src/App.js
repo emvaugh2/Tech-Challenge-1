@@ -23,7 +23,7 @@ function App() {
     <div className="App">
       {!failureMessage && !successMessage ? 'Fetching...' : null}
       {failureMessage ? failureMessage : null}
-      {successMessage ? `SUCCESS: ${successMessage}` : null}
+      {successMessage ? `WEBHOOK SUCCESS: ${successMessage}` : null}
     </div>
   );
 }

@@ -166,7 +166,9 @@ And that concludes our legacy migration project!
 
 10/02/2026
 
+We got everything to work!!! Okay nice. So the backend listener rule had the path `/api/*` so anything that matched at least `/api/` at the end of the ALB would get routed to the backend. This his how we were able to see the backend ID message. The backend code said app.get which grabs the id: ID. Then is shows id with some UUID. I still don't quite understand the frontend part so we'll need to review that. 
 
+We just created the webhook. We disabled SSL as well but everything else was pretty much by the book. About to test it out. 
 
 
 
