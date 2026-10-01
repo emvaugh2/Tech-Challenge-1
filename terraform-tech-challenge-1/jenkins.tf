@@ -31,7 +31,7 @@ resource "aws_key_pair" "master_public_key" {
 resource "aws_instance" "jenkins_server" {
 
   ami           = "ami-0fef201115eefe936"
-  instance_type = "t3.micro"
+  instance_type = "t3.small"
 
   vpc_security_group_ids = [
     aws_security_group.jenkins_sg.id
