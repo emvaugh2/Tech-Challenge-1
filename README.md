@@ -172,7 +172,15 @@ I needed to also come up with my file tree structure before I created my GitHub 
 
 I forgot to include the frontend and backend additional files in my push to my repo so I had to clone the challenge repo again to my Downloads folder, then move them over to my frontend and backend directories. I also messed this up because I accidentally copied the entire frontend directory into my frontend directory. So it was frontend/frontend/src. Same with the backend directories.
 
+Now, I followed the instructions for the CI/CD pipeline build. I had to modify my script path to fit exactly what I have in my GitHub repo `jenkins-tech-challenge-1/Jenkinsfile`. I ran the pipeline to test it out before the GitHub webhook. It made it to the frontend Dockerfile and got stuck at RUN npm install. Apparently this can be resource intensive. I'm going to reboot my instance in a second. 
 
+Okay after about 45 minutes, I decided to stopped the instance, upgrade it to a t3.small, and start it back up. The public IP changed automatically. I'm able to log back into it now. I had to restart my Jenkins container using `docker start jenkins`. 
+
+So the pipeline failed. This was probably due to the instance restart. We're going to test on our EC2 instance outside of our Jenkins container to make sure that the frontend image is being created properly. Okay this time it ran without any issues! But we noticed the ECS wasn't pulling the right image. We found this out by going to both of the ECS frontend and backend services and looking at the Events (basic the logs). It showed the error `CannotPullContainerError`. It was looking at the docker.io registry and not my ECR I believe. We needed to grab the ECR URIs for both the frontend and backend images, create a new revision in the ECS service for the frontend and backend, and replae the image with the ECR URI followed by :latest. For example, `177989593957.dkr.ecr.us-east-1.amazonaws.com/backend-repository:latest`. 
+
+After that, go back to your clusters and update both frontend-ecs-service and backend. Use the latest revision and press save. They should run again. That's working now but when we went to the ALB's URL, we got a failure to fetch. Now, I'm getting sleepy at this point so AI is doing the heavy lifting. It appears we need to change our CORS_ORIGIN and our API URL in our backend and frontend in order to get this going. 
+
+Go into frontend and config.js. Change the local host to http://tech-challenge-1-alb-486707836.us-east-1.elb.amazonaws.com/api. Then go into the same file in the backend and put the same URL but remove the `/api` at the end. 
 
 
 
