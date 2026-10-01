@@ -1,0 +1,57 @@
+name: Deploy to ECS
+
+on:
+  push:
+    branches:
+      - gitops
+
+env:
+  AWS_REGION: us-east-1
+  ECR_FRONTEND: 177989593957.dkr.ecr.us-east-1.amazonaws.com/frontend-repository
+  ECR_BACKEND: 177989593957.dkr.ecr.us-east-1.amazonaws.com/backend-repository
+  CLUSTER_NAME: tech-challenge-ecs-cluster-1
+  FRONTEND_SVC: frontend-ecs-service
+  BACKEND_SVC: backend-ecs-service
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: arn:aws:iam::177989593957:role/gitops-iam-role
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push frontend image
+        run: |
+          docker build -t frontend:latest ./frontend
+          docker tag frontend:latest $ECR_FRONTEND:latest
+          docker push $ECR_FRONTEND:latest
+
+      - name: Build, tag, and push backend image
+        run: |
+          docker build -t backend:latest ./backend
+          docker tag backend:latest $ECR_BACKEND:latest
+          docker push $ECR_BACKEND:latest
+
+      - name: Update ECS frontend service
+        run: |
+          aws ecs update-service --cluster $CLUSTER_NAME --service $FRONTEND_SVC --force-new-deployment --region $AWS_REGION
+
+      - name: Update ECS backend service
+        run: |
+          aws ecs update-service --cluster $CLUSTER_NAME --service $BACKEND_SVC --force-new-deployment --region $AWS_REGION
+
