@@ -6,8 +6,8 @@ pipeline {
         AWS_REGION = 'us-east-1'
 
         // ====> Replace with your own ECR repository URIs
-        FRONTEND_REPO = 'your-frontend-ecr-repo-uri'
-        BACKEND_REPO  = 'your-backend-ecr-repo-uri'
+        FRONTEND_REPO = '177989593957.dkr.ecr.us-east-1.amazonaws.com/frontend-repository'
+        BACKEND_REPO  = '177989593957.dkr.ecr.us-east-1.amazonaws.com/backend-repository'
     }
 
     stages {
@@ -28,7 +28,7 @@ pipeline {
 
         stage('Authenticate to ECR') {
             steps {
-                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'your-aws-credentials-id']]) {
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds']]) {
                     script {
                         sh '''
                             aws --version
@@ -56,11 +56,11 @@ pipeline {
 
         stage('Update ECS services') {
             steps {
-                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'your-aws-credentials-id']]) {
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds']]) {
                     script {
                         sh '''
-                            aws ecs update-service --cluster your-ecs-cluster-name --service your-frontend-service-name --force-new-deployment --region $AWS_REGION
-                            aws ecs update-service --cluster your-ecs-cluster-name --service your-backend-service-name --force-new-deployment --region $AWS_REGION
+                            aws ecs update-service --cluster tech-challenge-ecs-cluster-1 --service frontend-ecs-service --force-new-deployment --region $AWS_REGION
+                            aws ecs update-service --cluster tech-challenge-ecs-cluster-1 --service backend-ecs-service --force-new-deployment --region $AWS_REGION
                         '''
                     }
                 }

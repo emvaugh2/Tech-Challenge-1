@@ -166,7 +166,13 @@ And that concludes our legacy migration project!
 
 10/01/206
 
-Lets talk about Phase 5 which is the real final phase. The rest is testing and using GitOps. 
+Lets talk about Phase 5 which is the real final phase. The rest is testing and using GitOps. Okay now we're getting our Jenkinsfile together. All I really had to do was put in my region and my ECR frontend and backend URIs. You can find this in the AWS console. 
+
+I needed to also come up with my file tree structure before I created my GitHub repo online. I created it but I organized all my files first before I pushed them up. It caused some issues because of a duplication error but once I removed the empty Tech-Challenge-1 folder, I was able to push my code up. I had it ignore my .pem file as well. 
+
+I forgot to include the frontend and backend additional files in my push to my repo so I had to clone the challenge repo again to my Downloads folder, then move them over to my frontend and backend directories. I also messed this up because I accidentally copied the entire frontend directory into my frontend directory. So it was frontend/frontend/src. Same with the backend directories.
+
+
 
 
 
