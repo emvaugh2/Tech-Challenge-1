@@ -199,10 +199,24 @@ But first, configure OIDC for GitHub Actions.
 
 Then, create an IAM role for GitOps. You can name it whatever you'd like but give it the process policies. You'll also need the ARN for the role so copy that for our deploy.yml file. Now, this part got tricky because the GitOps job kept failing. Apparently there was an update to GitHub Actions regarding something being immutable. I found some solutions online and had to edit my Trust relationship JSON to relfect this new update.
 
-![OIDC created in AWS console](pictures/Phase8/tc1phase8pic2.png)
+![gitops-iam-role creation](pictures/Phase8/tc1phase8pic2.png)
 
 
-I've included my deploy.yml file for the GitOps job automation so use that and input your own data. 
+I've included my deploy.yml file for the GitOps job automation so use that and input your own data. Once you push the deploy file to your GitHub account, the same actions as your Jenkinsfile pipeline should occur automatically. We ran into some web identity issues here but we already stated that. You should get a green icon if the job ran successfully. 
+
+![GitOps in action](pictures/Phase8/tc1phase8pic3.png)
+
+Now, navigate to your ALB DNS name again and you should see your success message!
+
+![GitOps in action](pictures/Phase8/tc1phase8pic4.png)
+
+Not only did we use Jenknis for CI/CD, we also used GitOps as well. Feeling more and more like a DevOps engineer as the days go by. 
+
+There is a ton of information I didn't cover in these explanations but I'll organize my personal notes below so they make more sense. 
+
+Until next time!
+
+
 
 ## Personal Notes
 
