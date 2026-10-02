@@ -191,8 +191,18 @@ That proves that our autoscaling feature is working properly. Last but not least
 
 Sometimes it makes life a little easier when all your tools are in one place. We're going to create another version of a CI/CD pipeline using GitOps so all of our operations stay on GitHub. 
 
+Create the gitops branch and remove the Jenkinsfile from your branch. Create the workflows directory under your .github directory. This is where we'll put out GitOps CI/CD job. 
 
-![ECS frontend service increment](pictures/Phase8/tc1phase8pic1.png)
+But first, configure OIDC for GitHub Actions.
+
+![OIDC created in AWS console](pictures/Phase8/tc1phase8pic1.png)
+
+Then, create an IAM role for GitOps. You can name it whatever you'd like but give it the process policies. You'll also need the ARN for the role so copy that for our deploy.yml file. Now, this part got tricky because the GitOps job kept failing. Apparently there was an update to GitHub Actions regarding something being immutable. I found some solutions online and had to edit my Trust relationship JSON to relfect this new update.
+
+![OIDC created in AWS console](pictures/Phase8/tc1phase8pic2.png)
+
+
+I've included my deploy.yml file for the GitOps job automation so use that and input your own data. 
 
 ## Personal Notes
 
