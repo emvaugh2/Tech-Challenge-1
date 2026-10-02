@@ -154,9 +154,45 @@ You'll get a SUCCESS message for your pipeline if it works.
 
 ## Phase 6: Deploy Application and Validate
 
-We'll actually save the webhook for here. Once we create it, we'll edit one of out files, push it to Github, and the 
+We'll actually save the webhook for here. Once we create it, we'll edit one of out files, push it to Github, and then see if we get our success message.
+
+To create your webhook, navigate to your repo, and then go to Settings > Webhooks and create a new webhook. You'll need your Jenkins server PIP. Choose application/json. I don't remember entering a secret but you may have to do that. Disable SSL verification and choose Just the push event. 
+
+![Webhook creation](pictures/Phase6/tc1phase6pic2.png)
+
+Once you edit your code locally and push to GitHub, the webhook will trigger your Jenkins pipeline. 
+
+![Jenkins pipeline automatically being pushed](pictures/Phase6/tc1phase6pic3.png)
+
+Now navigate to your ALB's DNS name. Make sure you put http:// in front of it. You'll now see your success message!
+
+![Webhook success message](pictures/Phase6/tc1phase6pic1.png)
+
+Lets load test our application now. 
+
+## Phase 7: Local Testing and Scaling
+
+Okay we're going to test the autoscaling feature for our ECS services by doing a load test. Two things: I wasn't able to download siege so I made my own stress test. I've included the code in the repo. I also lowered the CPU Utilization scaling to 15% to clearly show the increase in tasks. 
+
+We're only going to do the stress test on the frontend. Navigate to your ECS resource and click on the frontend-ecs-service. Click on the Events tab. This is where we'll be able to see the tasks increase. 
+
+Log into your Jenkins EC2 instance and run the stress test. Make sure you swap the ALB DNS name with your own. 
+
+![Stress test output](pictures/Phase7/tc1phase7pic1.png)
+
+You should eventually see in the ECS resource tha tyour Tasks incremented due to your TargetTracking policy. 
+
+![ECS frontend service increment](pictures/Phase7/tc1phase7pic2.png)
+
+That proves that our autoscaling feature is working properly. Last but not least, lets remove our Jenkins pipeline and use GitOps instead. 
 
 
+## Phase 8: GitOps CI/CD
+
+Sometimes it makes life a little easier when all your tools are in one place. We're going to create another version of a CI/CD pipeline using GitOps so all of our operations stay on GitHub. 
+
+
+![ECS frontend service increment](pictures/Phase8/tc1phase8pic1.png)
 
 ## Personal Notes
 
