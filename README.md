@@ -4,171 +4,179 @@
 
 ## Tech Challenge 1 - Action Steps
 
-* Create and Connect to EC2 Linux Server
-* Update System, Install Packages, Enable Services, and Check Service Status'
-* Secure MySQL
-* Download WordPress & Extract WordPress Files
-* Move WordPress Files to Apache Directory & Set Appropriate Permissions
-* Log into MySQL, Create a WordPress Database & Database User
-* Rename the Sample Configuration File
-* Edit the wp-config.php File
-* Restart Apache & Access WordPress Portal
+* Phase 1: Local Setup & Application Validation
+* Phase 2: Containerization & Local Testing
+* Phase 3: Infrastructure Provisioning (Terraform)
+* Phase 4: Jenkins Setup on AWS
+* Phase 5: Create your CI/CD Pipeline
+* Phase 6: Deploy Application and Validate
+* Phase 7: Local Testing and Scaling
+* Phase 8: GitOps CI/CD
 
 ________________________
 
 
-## Create and Connect to EC2 Linux Server
+## Phase 1: Local Setup & Application Validation
 
-Welcome to our first major project! We'll be migrating a company's legacy system to AWS. Instead of hosting a company's WordPress webpage in their on-premise (on-prem) servers, we're going to migrate everything over to an AWS EC2 instance where the Apache Web Server (httpd) will host the frontend webpage and a MariaDB instance will cover the backend database (DB) information for our webpage. The end goal will be to make sure we're able to reach the WordPress start-up portal in our EC2 instance's web browser. 
+Welcome to Tech Challenge 1! This project was definitely one to marvel at. I took a longer break from this project because of the Terraform section and having a rough few weeks but we finished it. I'll spare the extra details. Lets jump right!
+
+The overall purpose of this lab is to get the frontend code talking to the backend code. We test this locally which I'll do on an EC2 instance. Then, we'll package both ends in containers and make sure the containers can communicate. Next, we'll deploy an entire AWS infrastructure to create these containers utilizing Elastic Container Services with Fargate and Elastic Container Registry. We'll be using autoscaling as well. 
+
+Next, we'll get our Jenkins server up and running and create an automated CI/CD pipeline for our application image create, ECR storage, and ECS deployment. Once we complete that, we'll load test it to verify autoscaling and then implement the same CI/CD pipeline using GitOps!
 
 Ready? Lets go!
 
-Now, to make this project easily repeatable, I chose to use Terraform (TF) to build my infrastructure and Ansible to configure my web server node (titled `webserver-vm`) with all the appropriate packages. This took longer on the front end but it's quicker to deploy. Even if that isn't true, it's easier to destroy all of my infrastructure so I don't have to manually recreate it. With that being said, I'm borrowing the IaC syntax from my TF lab and my Ansible syntax from my Ansible lab. I will not be explaining all of these in detail since I've alreayd gone over this in the past. 
+I'm going to test locally using an EC2 instance and pull down the code from my GitHub repo. First install git on your machine and pull the code from https://github.com/emvaugh2/Tech-Challenge-1. We were supplied the test code but there were some issues that I had to change when manually setting it all up. This code is included in my Dockerfile. 
 
-Here's a glimpse of my TF code: 
+![EC2 instance with cloned repo](pictures/Phase1/tc1phase1pic1.png)
 
-![Spin up the EC2 instance](images/OnePercentWeek7Project1_Task1.png)
+Lets get the backend running. We'll be accessing it on port 8080 and it should display an ID message or a success message. First, install npm and node using the following commands:
 
-The tree structure is essentially the same. I removed the S3 bucket module since I don't need it for this project. I edited my worker nodes to only have one node and I renamed it `webserver`. I changed the name of the output files and I also added an output variable in my ec2_general module for my web server's private IP. I also had to add this to my root output.tf file to get that private IP. It wasn't necessary but I did it anyway. Lastly, I also needed to update the region in one of my files because AWS just wasn't accepting my general `us-east-1` region any longer. 
+- curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+- source ~/.bashrc
+- nvm install --lts
 
-Once you save all of that, you know what to do. Terraform init, plan, and apply!
+Verify by using the node --version and npm --version commands. ONce installed, run `npm ci` in your backend file. Then, run `npm start` to get your backend running. Before you do that, make sure your CORS_ORIGIN says `'http://localhost:8080'`. Eventually we'll update this but for now, we'll test on the localhost which is the EC2 instance. 
 
-![EC2 control and web server node creation](images/OnePercentWeek7Project1_Task2.png)
+![Backend code starting up](pictures/Phase1/tc1phase1pic2.png)
 
-Quick and easy! Now, you're probably wondering why I made a control node and a web server node. I wanted to reuse my TF and Ansible automation code but also, I was running into some dependency issues on my local machine to run my Ansible commands. Im on a Windows computer and apparently Git Bash wouldn't cut it for Ansible. I would've had to switch to WSL and I didn't want to do that. Lastly, with TF, I can destroy my infrastructure more easily so this works better for me. 
+Normally, we would test using a web browser but since I'm using an EC2 instance, we're just going to do a curl test to localhost on port 8080. You can barely see the id verification but it's there. 
 
-Lets get logged in our control node. We need to SSH in our virtual machine (VM) using the private key generated from our TF code. Then, we'll copy that key over to the control node to use it for all SSH activity into our web server. Run the following commands but swap `X.X.X.X` with your public IP (PIP) of your control node. 
+![Backend verification test](pictures/Phase1/tc1phase1pic3.png)
 
-![Set up control node for Ansible](images/OnePercentWeek7Project1_Task3.png)
+Lets get the frontend running. We'll be doing the same test. We should get the other success message. First, make sure the security group (SG) has ports 3000 and 8080 open. Then, edit your CORS_ORIGIN and API for your backend and frontend to be `http://<elastic-public-ip>:XXXX` for whichever backend or frontend you're in. I was running into some issues so I had to change the version of nvm I was running. I used the commands `nvm install 16` and `nvm use 16`. Then I reran my frontend commands to get my frontend running. 
 
-Once you've completed that, use `ls -l` to make sure your key is your ec2-user home directory. 
+Run the backend in one terminal and then open another terminal to run the frontend. 
 
-![SSH into control node and copy private key](images/OnePercentWeek7Project1_Task4.png)
+![Frontend terminal verification](pictures/Phase1/tc1phase1pic4.png)
 
-Now, run the following commands on your control node to set it up for Ansible. We need to install Ansible, change the permissions on the private key, verify Ansible is installed and make sure we don't have to answer the fingerprint prompt for SSH (overkill for this lab but a good habit for now). 
+You should see the Compiled successfully message in the second terminal. Navigate to the EC2's public IP (PIP) to see the actual success message. I changed it to FRONTEND SUCCESS just for this phase. This is the real message we'll be testing throughout the project. 
 
-![Set up control node for Ansible](images/OnePercentWeek7Project1_Task5.png)
 
-Here's what everything should look like when you're done. 
+![Frontend web browser success verification](pictures/Phase1/tc1phase1pic5.png)
 
-![Ansible install verification](images/OnePercentWeek7Project1_Task6.png)
+Lets move onto Phase 2 where we containerize all of this. 
 
-Lets move to the next section to get our packages up and running!
 
-## Update System, Install Packages, Enable Services, and Check Service Status'
+## Phase 2: Containerization & Local Testing
 
-Lets use more automation to set up our web server. Once again, this was more work on the frontend but it allows us to copy and paste in order to make sure our web server works the same way every time. 
 
-Lets get our inventory file working on our control node. Once again, I won't be going over our inventory and playbook files in detail because I already did that in the Ansible labs. Here's a snapshot of the inventory file with our web server's private IP:
+In this phase, we'll be doing the same thing from Phase 1 except we'll run the frontend and backend code in their own separate containers. Then, we want those two containers to be able to talk to each other. 
 
+I had to make a few changes to the source code to get these to run but I built Dockerfiles for both ends. First, lets install Docker and get the service running. 
 
-![Ansible inventory file](images/OnePercentWeek7Project1_Task7.png)
+![Downloads Docker, starts & enables it, and shows the status of it](pictures/Phase2/tc1phase2pic1.png)
 
-I also changed the name of our hosts group and the name of the overall inventory file. Here's a screenshot of our playbook YAML file:
+I already have the Dockerfiles from the tutorial but like I said, I updated them so they would work without error. Lets build the images from these files. We'll start with the backend. Use the command `docker build -t frontend:v1 .` Then we'll create the frontend image. Use the command `docker build -t backend:v1 .` Make sure to run these in their respective directories. 
 
-![Ansible playbook file](images/OnePercentWeek7Project1_Task8.png)
+![Verifies frontend and backend image creation](pictures/Phase2/tc1phase2pic2.png)
 
-Now here, we're just installing more services and packages at one time. We're also starting and enabling more services at one time. I googled the syntax for the loop when it came to starting the services. Ansible will just circle through each item in the loop until all the items in the service block are started. 
 
-Now, lets ping our web server from our control node and then run the playbook. First, we need to create the files on our control node so copy and paste the file contents over. 
+Lets get both of these containers up and running and then get them to communicate. Use the commands
 
-![Ansible ping](images/OnePercentWeek7Project1_Task9.png)
+- docker run -d --name backend-app -p 8080:8080 backend:v1
+- docker run -d --name frontend-app -p 3000:3000 frontend:v1
 
-Now that the ping was successful, lets run our playbook!
+to accomplish that. Make sure you frun the backend first. Verify that they're running using the `docker ps` command. 
 
-![Ansible run playbook](images/OnePercentWeek7Project1_Task10.png)
+![Verifies frontend and backend containers are running](pictures/Phase2/tc1phase2pic3.png)
 
-That was successful so now lets log into our web server node and check the status of our services. On to the next section!
+Lets verify the frontend and backend are running. We can do a simple curl test for the backend check. Run `curl http://localhost:8080` on your EC2 instance. You should ge the id output again. I'm actually going to go to port 3000 in the web browser so you can see the message more clearly.
 
+![Verifies backend success message](pictures/Phase2/tc1phase2pic4.png)
 
-## Check the Status of Apache & MySQL
+Navigate to the same PIP but on port 3000 for the frontend success message. I changed it to CONTAINER SUCCESS for this phase. 
 
-Use the private key to SSH into your web server and run `sudo systemctl status {httpd,mariadb}` to make sure both services are started. 
+![Verifies frontend success message](pictures/Phase2/tc1phase2pic5.png)
 
-![Both Apache (HTTPD) and Maria DB are up and running](images/OnePercentWeek7Project1_Task11.png)
+This proves that the frontend and backend code can communicate with one another in in their seperate containers. How cool is that? Lets take it a step further and deploy all of these automatically using Elastic Container Services. 
 
-Since MySQL is included in Maria DB, we already know that's installed. Verify that PHP is installed as well (we need this for the Apache web server pages) by using `php -v`. 
+## Phase 3: Infrastructure Provisioning (Terraform)
 
-![Verify PHP installation](images/OnePercentWeek7Project1_Task12.png)
+So in Phase 3, we're all about Terraform (TF). This was the scariest phase because there were SO many TF files to create. There were a lot of errors and refining to comb through. I speak about all my issues in my personal notes so I'll just give the tutorial here and oversight. 
 
-That concludes this section! The rest of this lab isn't automated so we'll work through it piece by piece. 
+Here were some of the biggest issues:
+- Understanding AWS's IAM roles. There were specific roles like task executions for the ECS service and logging that needed to be configured and attached to different services
+- The SGs needed to allow specific traffic to the frontend and backend. We eventually found out the health probes were unhealthy so we needed to change the backend's source traffic to the Application Load Balancer (ALB).
+- We had place holders for some of the image lines and repository lines since I didn't have those created yet. This caused later deployment issues
 
-## Secure MySQL
+I could go on and on about this section alone. I did my best to use the TF website's resource blocks and craft them into my own with help from Copilot. My code was pretty close to the tutorial's code. That made my heart warm. I'll just give you an overview of my file structure. 
 
-We want to make sure our MySQL server is as secure as possible. We will still be leaving it pretty open to make this project easy but here's how you would harden the security for it. Use the command `sudo mysql_secure_installation` and follow the prompt. There are about 8 parts so click through them as you see fit. 
+![TF file structure](pictures/Phase3/tc1phase3pic1.png)
 
-![Securing your DB!](images/OnePercentWeek7Project1_Task13.png)
+I also made a few changes compared to the tutorial. I lowered the CPU Utilization threshold to 15% to demonstrate load scaling. Now, lets actually deploy our infrastructure. We'll use terraform init to get our TF started, terraform fmt -recursive to fix all formatting issues, terraform validate to check for configuration errors, terraform plan to see what will be happening, and then terraform apply to deploy. 
 
-I pretty much pressed no to all of the prompts. The above is what your finished command should look like. That conlcudes this section. 
+![TF apply verification](pictures/Phase3/tc1phase3pic2.png)
 
-## Download WordPress & Extract WordPress Files
+You can see we created 50 resources and the only output variable was the Jenkin's public server. A few resources were created were the entire VPC, IAM roles, ECS + Fargate, ECR, CloudWatch, Autoscaling, the Jenkin's server, and the ALB. 
 
-Lets down WordPress and move the files to the correct directory. You can use the command `wget` which downloads files directly from the internet. Use `wget https://wordpress.org/latest.tar.gz` to download the tar file. Then we'll extract the compressed tar file using `tar xvzf latest.tar.gz`. The flags for this tar command are x for extract, v for verbose (shows you all the output during the process), z for uncompress I believe and f for file. You usually need f for all of your tar commands so get used to it. 
+Lets move onto Phase 4!
 
-![WordPress final file extract](images/OnePercentWeek7Project1_Task14.png)
+## Phase 4: Jenkins Setup on AWS
 
-Now, lets move our wordpress directory and files to the right location!
+In Phase 4, we're getting our Jenkins server ready to run our pipelines automatically. So we're going to spin up an EC2 instance and run Jenkins as a custom container. Why? Because we need to make sure the Jenkin's container docker commands can interact with our EC2 instance's docker daemon. We completed this in a previous lab but the jenkins user needs to be in the same group as our host docker group. It's easier to run this in a contain automatically. 
 
+Log into your EC2 instance and install Docker. Get that up and running. Now, find the docker group so we can insert that into our container. 
 
-## Move WordPress Files to Apache Directory & Set Appropriate Permissions
+![Docker up and running ](pictures/Phase4/tc1phase4pic1.png)
 
-We want our Apache Web Server to read the index files from our WordPress word tree. So lets move the entire directory to the `/var/www/html` directory. Based on the Apache configuration (conf) files, this is where Apache will read the contents it serves to the public. Run `sudo mv wordpress/* /var/www/html` where mv is short for move. You can also use mv to rename files which you'll see later. 
+Lets install Git and clone our repo so we'll have our Jenkins Dockerfile. It's located in the docker-images-tech-challenge-1 folder. You may need to change your group id to match whatever group your jenkin's EC2 instance has. Mine container still matches so I'll go ahead and build my image so we can get logged into the Jenkins portal. Run 'docker build -t custom-jenkins:latest .' in the directory to build the image. Then lets run the container. 
 
-Now, the service user that runs all of our Apache services is called `apache`. We need to give it permission over these files since currently, the owner and group are `ec2-user` by default. Then, we'll give the files and directories the permissions 755. 
 
-![WordPress directory transfer and permission change + verification](images/OnePercentWeek7Project1_Task15.png)
+![Jenkins container up and running](pictures/Phase4/tc1phase4pic2.png)
 
-Lets configure the DB part of this project.
+Now access the Jenkins container UI on the PIP using port 8080. They give you the command `sudo docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword` to get the admin password. Create an account so you can have your own credentials. Install the suggested plugins although I don't think you'll need them since Git is already installed. 
 
-## Log into MySQL, Create a WordPress Database & Database User
+![Jenkins portal login](pictures/Phase4/tc1phase4pic3.png)
 
-Lets log into our MySQL DB using the root user and no password. Run the command `sudo mysql -u root -p`. Once you're logged in, create a DB for our WordPress site using `CREATE DATABASE wordpress_db;`. Don't forget the semi-colon! I won't show this part since we already went through this in our DB lab. 
+Lets create some credentials. We want to create a GitHub PAT Token and our AWS Credentials. You'll need to install the AWS Credentials plugin. 
 
-The part we haven't done before was create a DB user so I'll show that input. The `CREATE USER 'wordpress_user'@'localhost' IDENTIFIED BY '<your_password>';` is pretty straight forward. You're creating a user named `wordpress_user` on your local machine which would be the web server EC2 instance. You can make this user anything you want but for documentation purposes, it will be easiest to read as wordpress_user. You're identified by your password. You can type in any password your want between the quotation marks.
+![Jenkins credentials](pictures/Phase4/tc1phase4pic4.png)
 
-`GRANT ALL PRIVILEGES ON wordpress_db.* TO 'wordpress_user'@'localhost';` basically says allow the wordpress_user on the local host to be able to do whatever it wants with the wordpress_db DB along with all tables that belong to that DB (hence the .*) portion. 
 
-`FLUSH PRIVILEGES` is similar to Flush DNS for my network engineers. It says forget all the privileges your currently know and renew it from the DB. This is how you'll pick up on the privileges you just granted the wordpress_user. 
+Once we're done there, we can start building our pipeline! Lets go to Phase 5.
 
-![DB User creation + privileges](images/OnePercentWeek7Project1_Task16.png)
 
-That wasn't too bad! Now lets do some more Apache related tasks. 
+## Phase 5: Create your CI/CD Pipeline
 
-## Rename the Sample Configuration File
+We're going to created our Jenkins pipeline to grab our frontend and backend Dockerfiles, created images out of them, push them to the ECR, and then have ECS run them. We're also going to automate this process by creating a GitHub webhook that automatically runs our pipeline when we push any updates to GitHub. 
 
-Lets rename the sample configuration WordPress file so we can actually use it for our web portal. Remember when I said you can use the `mv` command to rename files? We'll do that here. Run `sudo mv /var/www/html/wp-config-sample.php /var/www/html/wp-config.php`. Verify the name change by using the list commmand with grep to search for the file in the directory. 
+Use the Jenkinsfile we created and push that to your GitHub. Once you do that, we'll create our pipeline. Make sure you swap out your back and frontend repo URIs. 
 
-![wp-config file rename](images/OnePercentWeek7Project1_Task17.png)
+![Jenkins credentials](pictures/Phase5/tc1phase5pic1.png)
 
-Now, lets edit the config file. 
+You'll create the Jenkins pipeline using a trigger this time. The trigger will look like the above. We need to also create out Git webhook. Before that, you can verify that the pipeline works. I ran into an issue here previously. My EC2 instance was too small and it couldn't handle the workload. I had to upgrade it to a t3.small instead of a micro.
 
-## Edit the wp-config.php File
+You'll get a SUCCESS message for your pipeline if it works. 
 
-We'll simply be inputting our wordpress_user credentials into the `wp-config.php` file in order to allow Apache to work with our DB. Open the file using `vim` and using the `/` to search for the define lines. Alter them with the information we created for our wordpress_user.
+![Jenkins pipeline SUCCESS](pictures/Phase5/tc1phase5pic2.png)
 
-`sudo vim /var/www/html/wp-config.php`
 
-Use `cat` + `grep` to confirm we changed the lines appropriately. 
+## Phase 6: Deploy Application and Validate
 
-![define confirmation](images/OnePercentWeek7Project1_Task18.png)
+We'll actually save the webhook for here. Once we create it, we'll edit one of out files, push it to Github, and the 
 
-Now, we're almost there! Last few steps. 
 
-## Restart Apache & Access WordPress
-
-Now, restart your Apache service so that it will pick up the changes you made to the configuration (config) files. Run `sudo systemctl restart httpd`. Once you've done that, take your web server's PIP and put it in the web browser. You should be able to access the Word Press wizard. 
-
-![WordPress wizard confirmation](images/OnePercentWeek7Project1_Task19.png)
-
-And that concludes our legacy migration project!
 
 ## Personal Notes
+
+
+GitOps Notes:
+
+We need to create the gitops branch for out changes in our repo. We created the IAM role and access information in the AWS Console. Now lets fill in the deploy.yml file. Once I filled this in, I ran into the WithWedIdentity issue every time I deployed my changes to GitHub. After some googling, there was an article about immutable repos or something that I gave to Copilot. I also had this repo line under my Settings > Actions > OIDC where I had to copy and paste that. We created a new trusted relationship policy and this allowed the automated deployed!
+
+I was finally able to test for my GitOps success message and we finished this entire thing up. 
+
 
 10/02/2026
 
 We got everything to work!!! Okay nice. So the backend listener rule had the path `/api/*` so anything that matched at least `/api/` at the end of the ALB would get routed to the backend. This his how we were able to see the backend ID message. The backend code said app.get which grabs the id: ID. Then is shows id with some UUID. I still don't quite understand the frontend part so we'll need to review that. 
 
-We just created the webhook. We disabled SSL as well but everything else was pretty much by the book. About to test it out. Another typo. Not sure where that came from. 
+We just created the webhook. We disabled SSL as well but everything else was pretty much by the book. About to test it out. Once I fixed the typos, we were good to go! So we're almost done with this. How beautiful. 
+
+Okay we changed the scaling policy from 50% to 15% CPU Utilization because we couldn't install siege and our other test wasn't generating the traffic load needed to scale it up. 
+
+Last but not least, we need to use GitOps for our CI/CD pipeline now instead of Jenkins. 
 
 
 

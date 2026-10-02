@@ -20,7 +20,7 @@ resource "aws_ecs_task_definition" "frontend_task" {
   container_definitions = jsonencode([
     {
       name      = "frontend"
-      image     = "frontend-image"
+      image     = "${aws_ecr_repository.frontend_repo.repository_url}:latest"
       cpu       = 512
       memory    = 1024
       essential = true
@@ -101,7 +101,7 @@ resource "aws_ecs_task_definition" "backend_task" {
   container_definitions = jsonencode([
     {
       name      = "backend"
-      image     = "backend-image"
+      image     = "${aws_ecr_repository.backend_repo.repository_url}:latest"
       cpu       = 512
       memory    = 1024
       essential = true

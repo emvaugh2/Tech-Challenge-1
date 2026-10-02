@@ -37,3 +37,39 @@ COPY . .
 EXPOSE 8080
 CMD ["npm", "start"]
 
+# Generic seige type of load test
+
+for i in {1..250}
+do
+  (
+    for j in {1..200}
+    do
+      curl -s \
+      http://tech-challenge-1-alb-486707836.us-east-1.elb.amazonaws.com/ > /dev/null
+    done
+  ) &
+done
+wait
+
+
+
+# Trust relationship updated for July 2026
+
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "arn:aws:iam::177989593957:oidc-provider/token.actions.githubusercontent.com"
+      },
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringEquals": {
+          "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+          "token.actions.githubusercontent.com:sub": "repo:emvaugh2@131804156/Tech-Challenge-1@1398836559:ref:refs/heads/gitops"
+        }
+      }
+    }
+  ]
+}
