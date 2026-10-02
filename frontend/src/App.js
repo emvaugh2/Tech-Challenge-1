@@ -23,7 +23,7 @@ function App() {
     <div className="App">
       {!failureMessage && !successMessage ? 'Fetching...' : null}
       {failureMessage ? failureMessage : null}
-      {successMessage ? `TEST GITOPS SUCCESS: ${successMessage}` : null}
+      {successMessage ? `GITOPS SUCCESS: ${successMessage}` : null}
     </div>
   );
 }
